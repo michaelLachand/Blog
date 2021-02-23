@@ -3,8 +3,17 @@
 namespace App\Controller;
 
 use App\Entity\Article;
+use App\Entity\Comment;
+use App\Form\ArticleType;
+use App\Form\CommentType;
+use App\Repository\ArticleRepository;
+use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -12,42 +21,73 @@ class DefaultController extends AbstractController
 {
     /**
      * @Route("/", name="liste_articles", methods={"GET"})
+     * @param ArticleRepository $articleRepository
+     * @return Response
      */
-    public function listeArticles(): Response
+    public function listeArticles(ArticleRepository $articleRepository): Response
     {
-        $url1 = $this->generateUrl('vue_article', ['id' => 1]);
-        $url2 = $this->generateUrl('vue_article', ['id' => 2]);
-        $url3 = $this->generateUrl('vue_article', ['id' => 3]);
+
+        $article = $articleRepository->findByTitre('n°1');
+
+        $articles = $articleRepository->findAll();
 
         return $this->render('default/index.html.twig', [
-            'url1' => $url1,
-            'url2' => $url2,
-            'url3' => $url3,
+            'articles' => $articles,
         ]);
     }
 
     /**
-     * @Route("/{id}", name="vue_article", requirements={"id"="\d+"}, methods={"GET"})
+     * @Route("/{id}", name="vue_article", requirements={"id"="\d+"}, methods={"GET","POST"})
+     * @param ArticleRepository $articleRepository
+     * @param $id
+     * @return Response
      */
-    public function vueArticle($id)
+    public function vueArticle(Article $article,Request $request,EntityManagerInterface $em)
     {
+        $comment = new Comment();
+        $comment->setArticle($article);
+
+        $form = $this->createForm(CommentType::class, $comment);
+
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $em->persist($comment);
+            $em->flush();
+
+           return $this->redirectToRoute('vue_article',['id'=> $article->getId()]);
+        }
+        //$article = $articleRepository->find($id);
+
         return $this->render('default/vue.html.twig',[
-            'id' => $id,
+            'article' => $article,
+            'form'=> $form->createView(),
         ]);
-        return new Response("<h1>Article ". $id . "</h1> <p>Ceci est l'article</p>");
     }
 
     /**
      * @Route("/article/ajouter", name="ajout_article")
+     * @param EntityManagerInterface $em
      */
-    public function ajouter(EntityManagerInterface $em)
+    public function ajouter(EntityManagerInterface $em, Request $request)
     {
-        $article = new Article();
-        $article->setTitre("Titre de l'article");
-        $article->setContenu("Ceci est le contenu de l'article");
-        $article->setDateCreation(new \DateTime());
 
-        $em->persist($article);
-        $em->flush();
+        $article = new Article();
+        $form = $this->createForm(ArticleType::class, $article);
+
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $em->persist($article);
+            $em->flush();
+
+            return $this->redirectToRoute('liste_articles');
+        }
+
+        return $this->render('default/ajout.html.twig',[
+            'form'=> $form->createView(),
+        ]);
     }
 }

@@ -4,13 +4,16 @@
 
 {% block body %}
 
-    {% include 'menu/_menu.html.twig' %}
+
 
 
     <h1>Liste des articles</h1>
+
+    <p>Le tableau contient {{ articles | length }} articles.</p>
+
     <ul>
-        <li><a href="{{ url1 }}">Article 1</a></li>
-        <li><a href="{{ url2 }}">Article 2</a></li>
-        <li><a href="{{ url3 }}">Article 3</a></li>
+        {% for article in articles %}
+        <li><a href="{{ path('vue_article', {'id':article.id}) }}">{{ article.titre}}</a></li>
+        {% endfor %}
     </ul>
 {% endblock %}

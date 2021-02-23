@@ -19,6 +19,27 @@ class ArticleRepository extends ServiceEntityRepository
         parent::__construct($registry, Article::class);
     }
 
+    public function findByDateCreation(\DateTime $date)
+    {
+        $qb = $this->createQueryBuilder('a');
+        $qb->select('a');
+        $qb->where('a.dateCreation = :date');
+        $qb->setParameter('date', $date->format('Y-m-d'));
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function findByTitre($titre)
+    {
+        $qb = $this->createQueryBuilder('a');
+        $qb->select('a');
+        $qb->where('a.titre = :titre');
+        $qb->setParameter('titre',$titre);
+        $qb->setMaxResults(1);
+
+        return $qb->getQuery()->getOneOrNullResult();
+    }
+
     // /**
     //  * @return Article[] Returns an array of Article objects
     //  */

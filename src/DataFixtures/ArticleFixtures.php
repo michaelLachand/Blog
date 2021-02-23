@@ -20,6 +20,8 @@ class ArticleFixtures extends Fixture
 
             $article->setDateCreation($date);
 
+            $this->addReference('article-'.$i, $article);
+
             $manager->persist($article);
         }
 
