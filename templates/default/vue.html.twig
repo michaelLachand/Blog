@@ -19,6 +19,13 @@
                  <p>{{ comment.contenu }}</p>
             </div>
         {% endfor %}
+        {% for label, messages in app.flashes(['warning', 'danger']) %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
 
         {{ form_start(form) }}
 

@@ -8,6 +8,7 @@ use App\Form\ArticleType;
 use App\Form\CommentType;
 use App\Repository\ArticleRepository;
 use App\Repository\CategoryRepository;
+use App\Service\VerificationComment;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
@@ -42,8 +43,10 @@ class DefaultController extends AbstractController
      * @param $id
      * @return Response
      */
-    public function vueArticle(Article $article,Request $request,EntityManagerInterface $em)
+    public function vueArticle(Article $article,Request $request,EntityManagerInterface $em,
+                                VerificationComment $verificationComment)
     {
+
         $comment = new Comment();
         $comment->setArticle($article);
 
@@ -53,12 +56,15 @@ class DefaultController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid()){
 
-            $em->persist($comment);
-            $em->flush();
+            if($verificationComment->commentaireNonAutorise($comment) === false){
+                $em->persist($comment);
+                $em->flush();
 
-           return $this->redirectToRoute('vue_article',['id'=> $article->getId()]);
+                return $this->redirectToRoute('vue_article',['id'=> $article->getId()]);
+            } else {
+                $this->addFlash('danger', "Le commentaire contient un mot interdit");
+            }
         }
-        //$article = $articleRepository->find($id);
 
         return $this->render('default/vue.html.twig',[
             'article' => $article,
