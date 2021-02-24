@@ -28,12 +28,13 @@ class DefaultController extends AbstractController
     public function listeArticles(ArticleRepository $articleRepository): Response
     {
 
-        $article = $articleRepository->findByTitre('n°1');
-
-        $articles = $articleRepository->findAll();
+        $articles = $articleRepository->findBy([
+            'state' => 'publie'
+        ]);
 
         return $this->render('default/index.html.twig', [
             'articles' => $articles,
+            'brouillon'=> false,
         ]);
     }
 
@@ -54,6 +55,7 @@ class DefaultController extends AbstractController
 
         $form->handleRequest($request);
 
+
         if($form->isSubmitted() && $form->isValid()){
 
             if($verificationComment->commentaireNonAutorise($comment) === false){
@@ -72,28 +74,5 @@ class DefaultController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/article/ajouter", name="ajout_article")
-     * @param EntityManagerInterface $em
-     */
-    public function ajouter(EntityManagerInterface $em, Request $request)
-    {
 
-        $article = new Article();
-        $form = $this->createForm(ArticleType::class, $article);
-
-        $form->handleRequest($request);
-
-        if($form->isSubmitted() && $form->isValid()){
-
-            $em->persist($article);
-            $em->flush();
-
-            return $this->redirectToRoute('liste_articles');
-        }
-
-        return $this->render('default/ajout.html.twig',[
-            'form'=> $form->createView(),
-        ]);
-    }
 }
